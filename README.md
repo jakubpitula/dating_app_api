@@ -4,7 +4,7 @@ Deployed on Deta, using JWT for Firebase authentication.
 
 ### 1. Sign-up 
 Endpoint - https://y2ylvp.deta.dev/signup  
-Required request fields (order irrelevant):  
+Required POST request fields (order irrelevant):  
     "email"  
     "password"  
     "first_name"  
@@ -16,7 +16,7 @@ If successful, returns HTTP response 200 with
 
 ### 2. Login
 Endpoint - https://y2ylvp.deta.dev/login  
-Required request fields:  
+Required POST request fields:  
     "email"  
     "password"
 
@@ -24,7 +24,7 @@ If successful, returns HTTP response 200 with
 "token": jwt
 ### 3. Validation 
 endpoint - https://y2ylvp.deta.dev/validate  
-Required header:  
+Required POST request header:  
 Key: Authentication  
 Value: jwt
 
