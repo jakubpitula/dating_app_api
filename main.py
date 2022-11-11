@@ -30,14 +30,20 @@ async def signup(request: Request):
     req = await request.json()
     email = req['email']
     password = req['password']
-    if email is None or password is None:
-        return HTTPException(detail={'message': 'Error! Missing Email or Password'}, status_code=400)
+    first_name = req['first_name']
+    last_name = req['last_name']
+    conf_pass = req['conf_pass']
+    if not email or not password or not first_name or not last_name or not conf_pass:
+        return HTTPException(detail={'message': 'You have to fill in all the required fields'}, status_code=400)
+    if conf_pass != password:
+        return HTTPException(detail={'message': "The passwords don't match"}, status_code=400)
     try:
         user = auth.create_user(
+            display_name=first_name + ' ' + last_name,
             email=email,
             password=password
         )
-        return JSONResponse(content={'message': f'Successfully created user {user.uid}'}, status_code=200)
+        return JSONResponse(content={'uid': user.uid}, status_code=200)
     except:
         return HTTPException(detail={'message': 'Error Creating User'}, status_code=400)
 
@@ -62,7 +68,7 @@ async def validate(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
     user = auth.verify_id_token(jwt)
-    return user["uid"]
+    return JSONResponse(content={'uid': user["uid"]}, status_code=200)
 
 
 if __name__ == "__main__":
