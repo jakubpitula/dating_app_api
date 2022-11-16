@@ -4,7 +4,8 @@ import pyrebase
 import json
 
 from firebase_admin import credentials, auth
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, status, Request
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
@@ -14,6 +15,7 @@ if not firebase_admin._apps:
     firebase = firebase_admin.initialize_app(cred)
 pb = pyrebase.initialize_app(json.load(open('config/firebase_config.json')))
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 allow_all = ['*']
 app.add_middleware(
     CORSMiddleware,
@@ -62,13 +64,23 @@ async def login(request: Request):
         return HTTPException(detail={'message': 'There was an error logging in'}, status_code=400)
 
 
-# validate endpoint
-@app.post("/validate")
-async def validate(request: Request):
+@app.get("/get_user_data") #protected route
+async def get_users(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
-    user = auth.verify_id_token(jwt)
-    return JSONResponse(content={'uid': user["uid"]}, status_code=200)
+
+    try:
+        auth.verify_id_token(jwt)
+    except:
+        return JSONResponse(content={'msg': 'Not authenticated'}, status_code=401)
+
+    req_json = await request.json()
+    uid = req_json['uid']
+    requested_user = auth.get_user(uid)
+    return JSONResponse(content={
+        'name': requested_user.display_name,
+        'email': requested_user.email
+    }, status_code=200)
 
 
 if __name__ == "__main__":
