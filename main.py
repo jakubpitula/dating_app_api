@@ -47,7 +47,7 @@ async def signup(request: Request):
         )
         return JSONResponse(content={'uid': user.uid}, status_code=200)
     except:
-        return HTTPException(detail={'message': 'Error Creating User'}, status_code=400)
+        return JSONResponse(content={'message': 'Error Creating User'}, status_code=400)
 
 
 # login endpoint
@@ -61,7 +61,7 @@ async def login(request: Request):
         jwt = user['idToken']
         return JSONResponse(content={'token': jwt}, status_code=200)
     except:
-        return HTTPException(detail={'message': 'There was an error logging in'}, status_code=400)
+        return JSONResponse(content={'message': 'There was an error logging in'}, status_code=400)
 
 
 @app.get("/get_user_data") #protected route
