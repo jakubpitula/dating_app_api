@@ -22,11 +22,24 @@ Required POST request fields:
 
 If successful, returns HTTP response 200 with  
 "token": jwt
-### 3. Validation 
-endpoint - https://y2ylvp.deta.dev/validate  
+### 3. Currently authenticated user data 
+endpoint - https://y2ylvp.deta.dev/get_current_user  
+Required GET request header:  
+Key: Authentication  
+Value: jwt
+
+If successful, returns HTTP response 200 with   
+'name': username   
+'email': email
+### 4. Arbitrary user data
+endpoint - https://y2ylvp.deta.dev/get_user_data
 Required POST request header:  
 Key: Authentication  
 Value: jwt
 
-If successful, returns HTTP response 200 with
-'uid': user id
+Required Get request fields:  
+    "uid"
+
+If successful, returns HTTP response 200 with   
+'name': username   
+'email': email
