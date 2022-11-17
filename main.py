@@ -83,5 +83,23 @@ async def get_users(request: Request):
     }, status_code=200)
 
 
+@app.get("/get_current_user") #protected route
+async def get_users(request: Request):
+    headers = request.headers
+    jwt = headers.get('authorization')
+
+    try:
+        user = auth.verify_id_token(jwt)
+    except:
+        return JSONResponse(content={'msg': 'Not authenticated'}, status_code=401)
+
+    # return user
+    return JSONResponse(content={
+        'name': user["name"],
+        'email': user["email"]
+    }, status_code=200)
+
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app")
