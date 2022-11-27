@@ -3,7 +3,7 @@ import firebase_admin
 import pyrebase
 import json
 
-from firebase_admin import credentials, auth
+from firebase_admin import credentials, auth, db
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,9 @@ from fastapi.exceptions import HTTPException
 
 if not firebase_admin._apps:
     cred = credentials.Certificate('config/dating_app_service_account_keys.json')
-    firebase = firebase_admin.initialize_app(cred)
+    firebase = firebase_admin.initialize_app(cred, {
+        'databaseURL': "https://dating-app-3e0f5-default-rtdb.europe-west1.firebasedatabase.app"
+    })
 pb = pyrebase.initialize_app(json.load(open('config/firebase_config.json')))
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -25,6 +27,7 @@ app.add_middleware(
     allow_headers=allow_all
 )
 
+ref = db.reference('/')
 
 # signup endpoint
 @app.post("/signup")
@@ -35,16 +38,30 @@ async def signup(request: Request):
     first_name = req['first_name']
     last_name = req['last_name']
     conf_pass = req['conf_pass']
-    if not email or not password or not first_name or not last_name or not conf_pass:
+    age = req['age']
+    gender = req['gender']
+
+    if not email or not password or not first_name or not last_name or not conf_pass or not age or not gender:
         return HTTPException(detail={'message': 'You have to fill in all the required fields'}, status_code=400)
     if conf_pass != password:
         return HTTPException(detail={'message': "The passwords don't match"}, status_code=400)
+    if gender not in ('m', 'f', 'nb', 'pns'):
+        return HTTPException(detail={'message': 'You have to choose a gender'}, status_code=400)
     try:
         user = auth.create_user(
             display_name=first_name + ' ' + last_name,
             email=email,
             password=password
         )
+
+        users_ref = ref.child('users')
+        users_ref.child(user.uid).set({
+            'name': first_name + ' ' + last_name,
+            'email': email,
+            'age': age,
+            'gender': gender
+        })
+
         return JSONResponse(content={'uid': user.uid}, status_code=200)
     except:
         return JSONResponse(content={'message': 'Error Creating User'}, status_code=400)
@@ -64,7 +81,7 @@ async def login(request: Request):
         return JSONResponse(content={'message': 'There was an error logging in'}, status_code=400)
 
 
-@app.get("/get_user_data") #protected route
+@app.get("/get_user_data")  # protected route
 async def get_users(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
@@ -76,14 +93,10 @@ async def get_users(request: Request):
 
     req_json = await request.json()
     uid = req_json['uid']
-    requested_user = auth.get_user(uid)
-    return JSONResponse(content={
-        'name': requested_user.display_name,
-        'email': requested_user.email
-    }, status_code=200)
+    return JSONResponse(content=ref.child("users").child(uid).get(), status_code=200)
 
 
-@app.get("/get_current_user") #protected route
+@app.get("/get_current_user")  # protected route
 async def get_users(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
@@ -94,11 +107,7 @@ async def get_users(request: Request):
         return JSONResponse(content={'msg': 'Not authenticated'}, status_code=401)
 
     # return user
-    return JSONResponse(content={
-        'name': user["name"],
-        'email': user["email"]
-    }, status_code=200)
-
+    return JSONResponse(content=ref.child("users").child(user["uid"]).get(), status_code=200)
 
 
 if __name__ == "__main__":
