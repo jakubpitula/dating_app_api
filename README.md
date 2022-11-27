@@ -13,7 +13,7 @@ Required POST request fields (order irrelevant):
     "age"   
     "gender"   
     
-##Constraints##:   
+## Constraints:   
 password - 6 characters or longer   
 gender - 'm', 'f', 'nb' or 'pns' - standing for male, female, non-binary, prefer not to say   
 
