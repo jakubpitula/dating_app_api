@@ -10,6 +10,12 @@ Required POST request fields (order irrelevant):
     "first_name"  
     "last_name"  
     "conf_pass"  
+    "age"   
+    "gender"   
+    
+#### Constraints:   
+password - 6 characters or longer   
+gender - 'm', 'f', 'nb' or 'pns' - standing for male, female, non-binary, prefer not to say   
 
 If successful, returns HTTP response 200 with  
 'uid': created user id
@@ -30,7 +36,9 @@ Value: jwt
 
 If successful, returns HTTP response 200 with   
 'name': username   
-'email': email
+'email': email   
+'gender': gender   
+'age': age   
 ### 4. Arbitrary user data
 endpoint - https://y2ylvp.deta.dev/get_user_data
 Required POST request header:  
@@ -42,4 +50,6 @@ Required Get request fields:
 
 If successful, returns HTTP response 200 with   
 'name': username   
-'email': email
+'email': email   
+'gender': gender   
+'age': age   
