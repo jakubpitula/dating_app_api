@@ -2,7 +2,12 @@ import uvicorn
 import firebase_admin
 import pyrebase
 import json
+import jwt
+import uuid
+import datetime
+import os
 
+from functools import lru_cache
 from firebase_admin import credentials, auth, db
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -10,11 +15,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 
+from config import Settings
+
 if not firebase_admin._apps:
     cred = credentials.Certificate('config/dating_app_service_account_keys.json')
     firebase = firebase_admin.initialize_app(cred, {
         'databaseURL': "https://dating-app-3e0f5-default-rtdb.europe-west1.firebasedatabase.app"
     })
+
 pb = pyrebase.initialize_app(json.load(open('config/firebase_config.json')))
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -28,6 +36,27 @@ app.add_middleware(
 )
 
 ref = db.reference('/')
+
+
+@lru_cache()
+def get_settings():
+    return Settings()
+
+
+@app.get("/generate_token")
+async def home(settings: Settings = Depends(get_settings)):
+    expires = 24 * 3600
+    now = datetime.datetime.utcnow()
+    exp = now + datetime.timedelta(seconds=expires)
+    try:
+        token = jwt.encode(payload={
+            'apikey': settings.API_KEY,
+            'permissions': ["allow_join"]
+        }, key=settings.SECRET_KEY)
+        return JSONResponse(content={'token': token}, status_code=200)
+    except:
+        return JSONResponse(content={'message': 'Error generating token'}, status_code=500)
+
 
 # signup endpoint
 @app.post("/signup")
