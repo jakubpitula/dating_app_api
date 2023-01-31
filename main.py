@@ -111,7 +111,7 @@ async def login(request: Request):
 
 
 @app.get("/get_user_data")  # protected route
-async def get_users(request: Request):
+async def get_user(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
 
@@ -125,8 +125,39 @@ async def get_users(request: Request):
     return JSONResponse(content=ref.child("users").child(uid).get(), status_code=200)
 
 
+@app.put("/user/{id}")
+async def update_user(uid: str, request: Request):
+
+    # todo:constraints on user data, update auth data
+
+    headers = request.headers
+    jwt = headers.get('authorization')
+
+    try:
+        current_user = auth.verify_id_token(jwt)
+    except:
+        return JSONResponse(content={'msg': 'Not authenticated'}, status_code=401)
+
+    if current_user["uid"] != uid:
+        return JSONResponse(content={'msg': 'Not authorized'}, status_code=401)
+
+    req_json = await request.json()
+    user = ref.child("users").child(uid)
+
+    if "email" in req_json:
+        user.update({"email": req_json["email"]})
+    if "age" in req_json:
+        user.update({"age": req_json["age"]})
+    if "gender" in req_json:
+        user.update({"gender": req_json["gender"]})
+    if "name" in req_json:
+        user.update({"name": req_json["name"]})
+
+    return JSONResponse(content=user.get(), status_code=200)
+
+
 @app.get("/get_current_user")  # protected route
-async def get_users(request: Request):
+async def get_current_user(request: Request):
     headers = request.headers
     jwt = headers.get('authorization')
 
