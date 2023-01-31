@@ -53,7 +53,7 @@ If successful, returns HTTP response 200 with
 'email': email   
 'gender': gender   
 'age': age   
-### 4. Updating (currently logged in) user data
+### 5. Updating (currently logged in) user data
 endpoint - https://y2ylvp.deta.dev/user/{uid}  -  put the id of the user whose data is to be changed in place of {uid}, eg. https://y2ylvp.deta.dev/user/TrUilQqV21YetH16a9MX0Cy1PWJ2   
 Required PUT request header:  
 Key: Authentication  
