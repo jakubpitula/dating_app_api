@@ -3,14 +3,12 @@ import firebase_admin
 import pyrebase
 import json
 import jwt
-import uuid
 import datetime
-import os
 
 from functools import lru_cache
 from firebase_admin import credentials, auth, db
-from fastapi import Depends, FastAPI, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Depends, FastAPI, Request
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
