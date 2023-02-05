@@ -5,11 +5,12 @@ from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import auth, db
 
 from config import Settings
-
-ref = db.reference('/')
+import pyrebase
+import json
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
+pb = pyrebase.initialize_app(json.load(open('config/firebase_config.json')))
+ref = db.reference('/')
 
 @lru_cache()
 def get_settings():

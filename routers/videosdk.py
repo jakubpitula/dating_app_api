@@ -4,8 +4,8 @@ import jwt
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from ..config import Settings
-from ..dependencies import get_settings
+from config import Settings
+from dependencies import get_settings
 
 router = APIRouter(
     tags=["videosdk"],

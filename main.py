@@ -1,13 +1,9 @@
-import json
 import uvicorn
 import firebase_admin
-import pyrebase
 
 from firebase_admin import credentials
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from .routers import users, auth, videosdk
 
 if not firebase_admin._apps:
     cred = credentials.Certificate('config/dating_app_service_account_keys.json')
@@ -15,9 +11,10 @@ if not firebase_admin._apps:
         'databaseURL': "https://dating-app-3e0f5-default-rtdb.europe-west1.firebasedatabase.app"
     })
 
-pb = pyrebase.initialize_app(json.load(open('config/firebase_config.json')))
-
 app = FastAPI()
+
+
+from routers import users, auth, videosdk
 
 app.include_router(users.router)
 app.include_router(auth.router)

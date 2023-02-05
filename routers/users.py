@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from firebase_admin import auth
 from fastapi.responses import JSONResponse
-from ..dependencies import get_current_user, ref, oauth2_scheme
-from ..models import CurrentUser, BaseUser
+
+from dependencies import get_current_user, oauth2_scheme, ref
+from models import CurrentUser, BaseUser
 
 router = APIRouter(
     prefix="/users",

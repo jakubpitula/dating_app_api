@@ -4,9 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from firebase_admin import auth
 from fastapi.responses import JSONResponse
 
-from ..models import Token
-from ..dependencies import ref
-from ..main import pb
+from models import Token
+from dependencies import pb, ref
 
 router = APIRouter(
     tags=["auth"],
