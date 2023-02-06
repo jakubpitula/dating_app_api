@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/generate_videosdk_token")
+@router.get("/generate_token")
 async def home(settings: Settings = Depends(get_settings)):
     expires_delta = 24 * 3600
     now = datetime.utcnow()
