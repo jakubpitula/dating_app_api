@@ -5,7 +5,7 @@ Deployed on Deta, using JWT for Firebase authentication.
 ### 1. Sign-up 
 #### Request type - POST
 Endpoint - https://y2ylvp.deta.dev/signup  
-Required POST request fields (order irrelevant):  
+Required request fields (order irrelevant):  
     "email"  
     "password"  
     "first_name"  
@@ -23,46 +23,41 @@ If successful, returns HTTP response 200 with
 
 ### 2. Login
 #### Request type - POST
-Endpoint - https://y2ylvp.deta.dev/login  
-Required POST request fields:  
-    "email"  
-    "password"
+Endpoint - https://y2ylvp.deta.dev/token  
+Required form_data (!) fields:  
+    "username"  
+    "password"   
+NB: Use the username field to input email. 
 
 If successful, returns HTTP response 200 with  
-"token": jwt
+"access_token": jwt   
+"token_type": "bearer"
 ### 3. Currently authenticated user data 
 #### Request type - GET
-endpoint - https://y2ylvp.deta.dev/get_current_user  
-Required GET request header:  
+endpoint - https://y2ylvp.deta.dev/users/me   
+Required request header:  
 Key: Authentication  
-Value: jwt
+Value: "Bearer {jwt}"
 
 If successful, returns HTTP response 200 with   
 'name': username   
 'email': email   
 'gender': gender   
 'age': age   
-### 4. Arbitrary user data
-#### Request type - POST
-endpoint - https://y2ylvp.deta.dev/get_user_data
-Required POST request header:  
-Key: Authentication  
-Value: jwt
-
-Required Get request fields:  
-    "uid"
+### 4. Any user data
+#### Request type - GET
+endpoint - https://y2ylvp.deta.dev/users/{uid}- put the id of the user in place of {uid}, eg. https://y2ylvp.deta.dev/user/TrUilQqV21YetH16a9MX0Cy1PWJ2
 
 If successful, returns HTTP response 200 with   
 'name': username   
-'email': email   
 'gender': gender   
 'age': age   
 ### 5. Updating (currently logged in) user data
 #### Request type - PUT
-endpoint - https://y2ylvp.deta.dev/user/{uid}  -  put the id of the user whose data is to be changed in place of {uid}, eg. https://y2ylvp.deta.dev/user/TrUilQqV21YetH16a9MX0Cy1PWJ2   
-Required PUT request header:  
+endpoint - https://y2ylvp.deta.dev/users/{uid}  -  put the id of the user whose data is to be changed in place of {uid}, eg. https://y2ylvp.deta.dev/user/TrUilQqV21YetH16a9MX0Cy1PWJ2   
+Required request header:  
 Key: Authentication  
-Value: jwt
+Value: "Bearer {jwt}"
 
 Optional PUT request fields (order irrelevant):  
     "email"  

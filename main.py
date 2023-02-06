@@ -13,7 +13,6 @@ if not firebase_admin._apps:
 
 app = FastAPI()
 
-
 from routers import users, auth, videosdk
 
 app.include_router(users.router)

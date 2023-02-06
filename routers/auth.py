@@ -11,6 +11,7 @@ router = APIRouter(
     tags=["auth"],
 )
 
+
 # signup endpoint
 @router.post("/signup")
 async def signup(request: Request):
