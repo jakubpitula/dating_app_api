@@ -7,10 +7,10 @@ class Token(BaseModel):
 
 
 class BaseUser(BaseModel):
-    name: str | None = None
-    age: int | None = None
-    gender: str | None = None
+    name: str
+    age: int
+    gender: str
 
 
 class CurrentUser(BaseUser):
-    email: str | None = None
+    email: str
