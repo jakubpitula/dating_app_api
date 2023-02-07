@@ -16,6 +16,15 @@ router = APIRouter(
 @router.post("/signup")
 async def signup(request: Request):
     req = await request.json()
+
+    if 'email' not in req.keys() or 'password' not in req.keys() or 'first_name' not in req.keys() or \
+            'last_name' not in req.keys() or 'conf_pass' not in req.keys() or 'age' not in req.keys() or \
+            'gender' not in req.keys():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='You have to fill in all the required fields'
+        )
+
     email = req['email']
     password = req['password']
     first_name = req['first_name']
@@ -24,21 +33,22 @@ async def signup(request: Request):
     age = req['age']
     gender = req['gender']
 
-    if not email or not password or not first_name or not last_name or not conf_pass or not age or not gender:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='You have to fill in all the required fields'
-        )
     if conf_pass != password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The passwords don't match"
         )
-    if gender not in ('m', 'f', 'nb', 'pns'):
+    if gender not in ('m', 'f'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST ,
+            detail='You have to choose a valid gender'
+        )
+    if int(age) < 18:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='You have to choose a gender'
+            detail='You have to be 18 or older'
         )
+
     try:
         user = auth.create_user(
             display_name=first_name + ' ' + last_name,
