@@ -16,7 +16,8 @@ Required request fields (order irrelevant):
     
 #### Constraints:   
 password - 6 characters or longer   
-gender - 'm', 'f', 'nb' or 'pns' - standing for male, female, non-binary, prefer not to say   
+gender - 'm', 'f' - standing for male, female
+age - integer, 18 or more
 
 If successful, returns HTTP response 200 with  
 'uid': created user id
