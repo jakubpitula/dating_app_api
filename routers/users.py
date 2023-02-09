@@ -70,3 +70,70 @@ async def update_user(uid: str, request: Request, token: str = Depends(oauth2_sc
         user.update({"name": req_json["name"]})
 
     return JSONResponse(content=user.get(), status_code=200)
+
+
+@router.post("/preferences")
+async def set_preferences(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    user_ref = ref.child("users").child(user["uid"])
+
+    try:
+        user_ref.update({
+            'preferences': {
+                'distance': req_json["distance"],
+                'sex': req_json["sex"],
+                'age_min': req_json["age_min"],
+                'age_max': req_json["age_max"]
+            }
+        })
+        return JSONResponse(content=user_ref.get(), status_code=200)
+
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect data",
+        )
+
+
+@router.post("/interests")
+async def set_interests(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    user_ref = ref.child("users").child(user["uid"])
+
+    try:
+        user_ref.update({
+            'interests': {
+                'hobbies': req_json["hobbies"],
+                'about': req_json["about"],
+                'zodiac': req_json["zodiac"],
+                'communication': req_json["communication"],
+                'workout': req_json["workout"],
+                'drinking': req_json["drinking"],
+                'smoking': req_json["smoking"]
+            }
+        })
+        return JSONResponse(content=user_ref.get(), status_code=200)
+
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect data",
+        )
