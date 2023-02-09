@@ -87,14 +87,7 @@ async def set_preferences(request: Request, token: str = Depends(oauth2_scheme))
     user_ref = ref.child("users").child(user["uid"])
 
     try:
-        user_ref.update({
-            'preferences': {
-                'distance': req_json["distance"],
-                'sex': req_json["sex"],
-                'age_min': req_json["age_min"],
-                'age_max': req_json["age_max"]
-            }
-        })
+        user_ref.update(req_json)
         return JSONResponse(content=user_ref.get(), status_code=200)
 
     except:
