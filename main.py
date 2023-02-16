@@ -1,14 +1,15 @@
 import uvicorn
 import firebase_admin
 
-from firebase_admin import credentials
+from firebase_admin import credentials, storage
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 if not firebase_admin._apps:
     cred = credentials.Certificate('config/dating_app_service_account_keys.json')
     firebase = firebase_admin.initialize_app(cred, {
-        'databaseURL': "https://dating-app-3e0f5-default-rtdb.europe-west1.firebasedatabase.app"
+        'databaseURL': "https://dating-app-3e0f5-default-rtdb.europe-west1.firebasedatabase.app",
+        'storageBucket': "dating-app-3e0f5.appspot.com"
     })
 
 app = FastAPI()

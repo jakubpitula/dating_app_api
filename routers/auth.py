@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
-from firebase_admin import auth
+from firebase_admin import auth, storage
 from fastapi.responses import JSONResponse
 
 from models import Token
@@ -32,6 +32,7 @@ async def signup(request: Request):
     conf_pass = req['conf_pass']
     age = req['age']
     gender = req['gender']
+    profile_pic_url = req['profilePicUrl']
 
     if conf_pass != password:
         raise HTTPException(
@@ -40,7 +41,7 @@ async def signup(request: Request):
         )
     if gender not in ('m', 'f'):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST ,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='You have to choose a valid gender'
         )
     if int(age) < 18:
@@ -53,7 +54,8 @@ async def signup(request: Request):
         user = auth.create_user(
             display_name=first_name + ' ' + last_name,
             email=email,
-            password=password
+            password=password,
+            photo_url=profile_pic_url,
         )
 
         users_ref = ref.child('users')
@@ -61,7 +63,8 @@ async def signup(request: Request):
             'name': first_name + ' ' + last_name,
             'email': email,
             'age': age,
-            'gender': gender
+            'gender': gender,
+            'profilePicUrl': profile_pic_url
         })
 
         return JSONResponse(content={'uid': user.uid}, status_code=200)

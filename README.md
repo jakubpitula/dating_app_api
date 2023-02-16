@@ -65,3 +65,17 @@ Optional PUT request fields (order irrelevant):
     "name"  
     "age"   
     "gender" 
+
+### 6. Setting user's preferences
+#### Request type - POST
+endpoint - https://y2ylvp.deta.dev/users/preferences  
+
+Required request header:  
+Key: Authentication  
+Value: "Bearer {jwt}"
+
+Required request fields (order irrelevant):  
+"distance"   
+"sex"   
+"age_min"   
+"age_max"   
