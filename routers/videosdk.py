@@ -67,3 +67,21 @@ async def add_pool(request: Request, token: str = Depends(oauth2_scheme)):
 
     video_pool.append([req_json["mId"], current_user["uid"]])
     return JSONResponse(content={'status': 'added'}, status_code=200)
+
+
+@router.post("/delete_from_pool")
+async def read_pool(token: str = Depends(oauth2_scheme)):
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not video_pool:
+        return JSONResponse(content='waiting', status_code=200)
+
+    video_pool.pop(0)
+    return JSONResponse(content='deleted', status_code=200)

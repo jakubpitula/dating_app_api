@@ -79,3 +79,20 @@ Required request fields (order irrelevant):
 "sex"   
 "age_min"   
 "age_max"   
+
+### 7. Setting user's interests
+#### Request type - POST
+endpoint - https://y2ylvp.deta.dev/users/interests  
+
+Required request header:  
+Key: Authentication  
+Value: "Bearer {jwt}"
+
+Required request fields (order irrelevant):  
+"hobbies"   
+"about"   
+"zodiac"   
+"communication"   
+"workout"   
+"drinking"   
+"smoking"   
