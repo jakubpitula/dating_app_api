@@ -68,6 +68,8 @@ async def update_user(uid: str, request: Request, token: str = Depends(oauth2_sc
         user.update({"gender": req_json["gender"]})
     if "name" in req_json:
         user.update({"name": req_json["name"]})
+    if "profilePicUrl" in req_json:
+        user.update({"profilePicUrl": req_json["profilePicUrl"]})
 
     return JSONResponse(content=user.get(), status_code=200)
 
