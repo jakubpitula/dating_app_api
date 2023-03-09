@@ -15,6 +15,11 @@ router = APIRouter(
 video_pool = []
 
 
+@router.get("/get_pool")
+async def get_pool():
+    return JSONResponse(content=video_pool, status_code=200)
+
+
 @router.get("/generate_token")
 async def home(settings: Settings = Depends(get_settings)):
     expires_delta = 24 * 3600
@@ -44,8 +49,8 @@ async def read_pool(token: str = Depends(oauth2_scheme)):
     if not video_pool:
         return JSONResponse(content='waiting', status_code=200)
 
-    res_meeting_id = video_pool[0]
-    video_pool.pop(0)
+    res_meeting_id = video_pool.pop(0)
+
     return JSONResponse(content={
         'meetingId': res_meeting_id[0],
         'userId': res_meeting_id[1]
@@ -66,11 +71,15 @@ async def add_pool(request: Request, token: str = Depends(oauth2_scheme)):
     req_json = await request.json()
 
     video_pool.append([req_json["mId"], current_user["uid"]])
+
     return JSONResponse(content={'status': 'added'}, status_code=200)
 
 
+# TODO: if there are 2 participants in one meeting and one of them leaves,
+#  restore the mId with the other user's uId to the pool
+
 @router.post("/delete_from_pool")
-async def read_pool(token: str = Depends(oauth2_scheme)):
+async def read_pool(request: Request, token: str = Depends(oauth2_scheme)):
     try:
         current_user = auth.verify_id_token(token)
     except:
@@ -81,7 +90,20 @@ async def read_pool(token: str = Depends(oauth2_scheme)):
         )
 
     if not video_pool:
+        req = await request.json()
+        if req["uId"]:
+            user_id = req["uId"]
+            meeting_id = req["mId"]
+
+            video_pool.append([meeting_id, user_id])  # restoring for the user that's left
+
         return JSONResponse(content='waiting', status_code=200)
 
-    video_pool.pop(0)
-    return JSONResponse(content='deleted', status_code=200)
+    to_pop = [item for item in video_pool if item[1] == current_user["uid"]]
+
+    for el in to_pop:
+        video_pool.pop(video_pool.index(el))
+
+    return JSONResponse(content={'status': 'deleted',
+                                 'mid': to_pop[0][0],
+                                 'uid': to_pop[0][1]}, status_code=200)
