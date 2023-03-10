@@ -28,8 +28,8 @@ async def get_user(uid: str):
         )
 
 
-@router.put("/{uid}")
-async def update_user(uid: str, request: Request, token: str = Depends(oauth2_scheme)):
+@router.put("/update")
+async def update_user(request: Request, token: str = Depends(oauth2_scheme)):
     # todo:constraints on user data
     try:
         current_user = auth.verify_id_token(token)
@@ -39,13 +39,10 @@ async def update_user(uid: str, request: Request, token: str = Depends(oauth2_sc
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if current_user["uid"] != uid:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Action forbidden",
-        )
 
     req_json = await request.json()
+    uid = current_user["uid"]
+
     try:
         auth.update_user(
             uid,

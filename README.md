@@ -55,7 +55,7 @@ If successful, returns HTTP response 200 with
 'age': age   
 ### 5. Updating (currently logged in) user data
 #### Request type - PUT
-endpoint - https://y2ylvp.deta.dev/users/{uid}  -  put the id of the user whose data is to be changed in place of {uid}, eg. https://y2ylvp.deta.dev/user/TrUilQqV21YetH16a9MX0Cy1PWJ2   
+endpoint - https://y2ylvp.deta.dev/users/update
 Required request header:  
 Key: Authentication  
 Value: "Bearer {jwt}"
@@ -64,7 +64,8 @@ Optional PUT request fields (order irrelevant):
     "email"  
     "name"  
     "age"   
-    "gender" 
+    "gender"  
+    "profilePicUrl"   
 
 ### 6. Setting user's preferences
 #### Request type - POST

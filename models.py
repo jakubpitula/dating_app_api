@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 
 
 class Token(BaseModel):
@@ -10,7 +11,7 @@ class BaseUser(BaseModel):
     name: str
     age: int
     gender: str
-    profilePicUrl: str | None = None
+    profilePicUrl: Union[str, None]
 
 
 class CurrentUser(BaseUser):
