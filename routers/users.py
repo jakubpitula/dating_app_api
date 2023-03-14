@@ -16,16 +16,20 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/{uid}", response_model=BaseUser)
-async def get_user(uid: str):
+@router.get("/friends")
+async def get_friends(token: str = Depends(oauth2_scheme)):
     try:
-        user = ref.child("users").child(uid).get()
-        return BaseUser(**user)
+        user = auth.verify_id_token(token)
     except:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+
+    friends_ref = ref.child("users").child(user["uid"]).child("friends")
+
+    return JSONResponse(content=friends_ref.get(), status_code=200)
 
 
 @router.put("/update")
@@ -135,4 +139,44 @@ async def set_interests(request: Request, token: str = Depends(oauth2_scheme)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect data",
+        )
+
+
+@router.post("/friends")
+async def add_friends(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    user_ref = ref.child("users").child(user["uid"])
+    friends_ref = user_ref.child("friends")
+
+    try:
+        friends_ref.push({
+            'uid': req_json["uid"]
+        })
+        return JSONResponse(content=user_ref.get(), status_code=200)
+
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect data",
+        )
+
+
+@router.get("/{uid}", response_model=BaseUser)
+async def get_user(uid: str):
+    try:
+        user = ref.child("users").child(uid).get()
+        return BaseUser(**user)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
         )

@@ -97,3 +97,23 @@ Required request fields (order irrelevant):
 "workout"   
 "drinking"   
 "smoking"   
+
+
+### 8. Adding friends
+#### Request type - POST
+endpoint - https://y2ylvp.deta.dev/users/friends  
+
+Required request header:  
+Key: Authentication  
+Value: "Bearer {jwt}"
+
+Required request fields (order irrelevant):  
+"uid" - of the new friend   
+
+### 9. Reading friends
+#### Request type - GET
+endpoint - https://y2ylvp.deta.dev/users/friends  
+
+Required request header:  
+Key: Authentication  
+Value: "Bearer {jwt}"
