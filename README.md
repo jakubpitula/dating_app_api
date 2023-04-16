@@ -108,7 +108,10 @@ Key: Authentication
 Value: "Bearer {jwt}"
 
 Required request fields (order irrelevant):  
-"uid" - of the new friend   
+"uid1" - of the one of the new friends
+"uid2" - of the other new friend
+
+At least one of "uid1" and "uid2" has to be the same as the id of the currently logged in user
 
 ### 9. Reading friends
 #### Request type - GET

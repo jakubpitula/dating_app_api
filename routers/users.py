@@ -145,7 +145,7 @@ async def set_interests(request: Request, token: str = Depends(oauth2_scheme)):
 @router.post("/friends")
 async def add_friends(request: Request, token: str = Depends(oauth2_scheme)):
     try:
-        user = auth.verify_id_token(token)
+        current_user = auth.verify_id_token(token)
     except:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -154,16 +154,26 @@ async def add_friends(request: Request, token: str = Depends(oauth2_scheme)):
         )
 
     req_json = await request.json()
-    user_ref = ref.child("users").child(user["uid"])
-    friends_ref = user_ref.child("friends")
+    if current_user["uid"] in (req_json["uid1"], req_json["uid2"]):
+        user1_ref = ref.child("users").child(req_json["uid1"])
+        user2_ref = ref.child("users").child(req_json["uid2"])
+        friends1_ref = user1_ref.child("friends")
+        friends2_ref = user2_ref.child("friends")
+        try:
+            friends1_ref.push({
+                'uid': req_json["uid2"]
+            })
+            friends2_ref.push({
+                'uid': req_json["uid1"]
+            })
+            return JSONResponse(content={'msg': 'Friends added'}, status_code=200)
 
-    try:
-        friends_ref.push({
-            'uid': req_json["uid"]
-        })
-        return JSONResponse(content=user_ref.get(), status_code=200)
-
-    except:
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incorrect data",
+            )
+    else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect data",
