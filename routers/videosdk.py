@@ -17,19 +17,6 @@ new_users = []
 matches = []
 
 
-@router.get("/get_pool")
-async def get_pool():
-    json_pool = []
-    for el in video_pool:
-        json_pool.append({
-            "meeting_id": el[0],
-            "user_id": el[1]
-        })
-    print(json_pool)
-
-    return JSONResponse(content=json_pool, status_code=200)
-
-
 @router.get("/generate_token")
 async def home(settings: Settings = Depends(get_settings)):
     expires_delta = 24 * 3600
@@ -43,6 +30,11 @@ async def home(settings: Settings = Depends(get_settings)):
     }, key=settings.SECRET_KEY)
 
     return JSONResponse(content={'token': token}, status_code=200)
+
+
+@router.get("/get_pool")
+async def get_pool():
+    return JSONResponse(content=video_pool, status_code=200)
 
 
 @router.post("/read_pool")
@@ -59,14 +51,100 @@ async def read_pool(token: str = Depends(oauth2_scheme)):
     if not video_pool:
         return JSONResponse(content='waiting', status_code=200)
 
-    res_meeting_id = video_pool.pop(0)
-    new_users.append([
-       res_meeting_id[0], current_user["uid"]
-    ])
-    return JSONResponse(content={
-        'meetingId': res_meeting_id[0],
-        'userId': res_meeting_id[1]
-    }, status_code=200)
+    res_meeting = {}
+    for video in video_pool:
+        if video["in_progress"] == 0:
+            res_meeting = video
+            video["in_progress"] = 1
+    if res_meeting:
+        res_meeting["answerer"] = {
+            "id": current_user["uid"],
+            "join_status": 1
+        }
+        new_users.append([
+            res_meeting["mId"], current_user["uid"]
+        ])
+        return JSONResponse(content={
+            'meetingId': res_meeting["mId"],
+            'userId': res_meeting["caller"]["id"],
+            "res_meeting": res_meeting
+        }, status_code=200)
+    else:
+        return JSONResponse(content='waiting', status_code=200)
+
+
+@router.post("/add_pool")
+async def add_pool(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+
+    new_video = {"mId": req_json["mId"], "caller": {
+        "id": current_user["uid"],
+        "join_status": 1
+    }, "answerer": {
+        "id": "",
+        "join_status": 0
+    },
+                 "in_progress": 0}
+    video_pool.append(new_video)
+
+    return JSONResponse(content={'status': 'added'}, status_code=200)
+
+
+@router.post("/get_remote_join_status")
+async def get_remote_join_status(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    for video in video_pool:
+        if video["mId"] == req_json["mId"]:
+            if video["caller"]["id"] == current_user["uid"]:
+                return JSONResponse(content={'status': video["answerer"]["join_status"],
+                                             'content': video_pool}, status_code=200)
+            else:
+                return JSONResponse(content={'status': video["caller"]["join_status"],
+                                             'content': video_pool}, status_code=200)
+
+    return JSONResponse(content={'status': -1, 'content': video_pool}, status_code=404)
+
+
+@router.post("/mark_joined")
+async def mark_joined(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    meeting_id = req_json["mId"]
+
+    for video in video_pool:
+        if video["mId"] == meeting_id:
+            if video["caller"]["id"] == current_user["uid"]:
+                video["caller"]["join_status"] = 2
+            elif video["answerer"]["id"] == current_user["uid"]:
+                video["answerer"]["join_status"] = 2
+
+    return JSONResponse(content=video_pool, status_code=200)
 
 
 @router.post("/find_user")
@@ -90,24 +168,6 @@ async def find_user(request: Request, token: str = Depends(oauth2_scheme)):
     return JSONResponse(content={
         'message': 'User not found'
     }, status_code=404)
-
-
-@router.post("/add_pool")
-async def add_pool(request: Request, token: str = Depends(oauth2_scheme)):
-    try:
-        current_user = auth.verify_id_token(token)
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    req_json = await request.json()
-
-    video_pool.append([req_json["mId"], current_user["uid"]])
-
-    return JSONResponse(content={'status': 'added'}, status_code=200)
 
 
 # TODO: if there are 2 participants in one meeting and one of them leaves,
@@ -134,14 +194,15 @@ async def read_pool(request: Request, token: str = Depends(oauth2_scheme)):
     #
     #     return JSONResponse(content='waiting', status_code=200)
 
-    to_pop = [item for item in video_pool if item[1] == current_user["uid"]]
+    to_pop = [video for video in video_pool if
+              current_user["uid"] in
+              (video["caller"]["id"], video["answerer"]["id"])]
 
     for el in to_pop:
         video_pool.pop(video_pool.index(el))
 
     return JSONResponse(content={'status': 'deleted',
-                                 'mid': to_pop[0][0],
-                                 'uid': to_pop[0][1]}, status_code=200)
+                                 'popped': to_pop}, status_code=200)
 
 
 @router.post("/did_match")
@@ -171,3 +232,10 @@ async def read_pool(request: Request, token: str = Depends(oauth2_scheme)):
     return JSONResponse(content={
         'matched': 0
     }, status_code=200)
+
+
+@router.get("/delete_pool")
+async def delete_pool():
+    video_pool.clear()
+
+    return JSONResponse(content=video_pool, status_code=200)
