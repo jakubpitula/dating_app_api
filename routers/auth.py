@@ -19,7 +19,7 @@ async def signup(request: Request):
 
     if 'email' not in req.keys() or 'password' not in req.keys() or 'first_name' not in req.keys() or \
             'last_name' not in req.keys() or 'conf_pass' not in req.keys() or 'age' not in req.keys() or \
-            'gender' not in req.keys():
+            'gender' not in req.keys() or 'profilePicUrl' not in req.keys():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='You have to fill in all the required fields'
