@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel
 from typing import Union, List
 
@@ -9,7 +11,7 @@ class Token(BaseModel):
 
 class BaseUser(BaseModel):
     name: str
-    age: int
+    birthdate: str
     gender: str
     profilePicUrl: Union[str, None]
 

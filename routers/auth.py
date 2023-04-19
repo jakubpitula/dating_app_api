@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from models import Token
 from dependencies import pb, ref
+from datetime import date, datetime
 
 router = APIRouter(
     tags=["auth"],
@@ -18,7 +19,7 @@ async def signup(request: Request):
     req = await request.json()
 
     if 'email' not in req.keys() or 'password' not in req.keys() or 'first_name' not in req.keys() or \
-            'last_name' not in req.keys() or 'conf_pass' not in req.keys() or 'age' not in req.keys() or \
+            'last_name' not in req.keys() or 'conf_pass' not in req.keys() or 'date' not in req.keys() or \
             'gender' not in req.keys() or 'profilePicUrl' not in req.keys():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -30,7 +31,7 @@ async def signup(request: Request):
     first_name = req['first_name']
     last_name = req['last_name']
     conf_pass = req['conf_pass']
-    age = req['age']
+    birthdate = req['date']
     gender = req['gender']
     profile_pic_url = req['profilePicUrl']
 
@@ -44,6 +45,11 @@ async def signup(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='You have to choose a valid gender'
         )
+    #
+    today = date.today()
+    birth = datetime.strptime(birthdate, "%d/%m/%Y")
+    print(birth)
+    age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
     if int(age) < 18:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -62,7 +68,7 @@ async def signup(request: Request):
         users_ref.child(user.uid).set({
             'name': first_name + ' ' + last_name,
             'email': email,
-            'age': age,
+            'birthdate': birthdate,
             'gender': gender,
             'profilePicUrl': profile_pic_url
         })

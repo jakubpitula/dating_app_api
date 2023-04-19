@@ -7,6 +7,8 @@ from firebase_admin import auth
 
 from config import Settings
 from dependencies import get_settings, oauth2_scheme
+from sse_starlette.sse import EventSourceResponse
+from queue import Queue
 
 router = APIRouter(
     tags=["videosdk"],
@@ -15,6 +17,7 @@ router = APIRouter(
 video_pool = []
 new_users = []
 matches = []
+users_queue = Queue()
 
 
 @router.get("/generate_token")
@@ -239,3 +242,80 @@ async def delete_pool():
     video_pool.clear()
 
     return JSONResponse(content=video_pool, status_code=200)
+
+
+ready_meetings = []
+
+
+@router.post("/add_user_to_queue")
+async def add_user_to_queue(token: str = Depends(oauth2_scheme)):
+    beg = users_queue.qsize()
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # if current_user["uid"] not in users_queue:
+    #     users_queue.append(current_user["uid"])
+    users_queue.put(current_user["uid"])
+
+    if users_queue.qsize() >= 2:
+        user1 = users_queue.get()
+        user2 = users_queue.get()
+
+        user_to_return = user1
+        if current_user["uid"] == user1:
+            user_to_return = user2
+        return JSONResponse(content={'status': 'matched', 'uid': user_to_return}, status_code=200)
+
+    return JSONResponse(content={'status': 'added', 'queue size': users_queue.qsize(),
+                                 'queue size beg ': beg}, status_code=200)
+
+    # users_queue[0] to be replaced with a matching algorithm
+    # users to be added to queue always, then match with others
+
+
+@router.post("/add_match")
+async def add_match(request: Request, token: str = Depends(oauth2_scheme)):
+    try:
+        current_user = auth.verify_id_token(token)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    req_json = await request.json()
+    ready_meetings.append({
+        'uid1': current_user["uid"],
+        'uid2': req_json["matchId"],
+        'mId': req_json["mId"]
+    })
+
+    return JSONResponse(content=ready_meetings, status_code=200)
+
+
+@router.get("/matched_event")
+async def message_stream(request: Request):
+    async def event_generator():
+        while True:
+            if await request.is_disconnected():
+                break
+            # Checks for new messages and return them to client if any
+            if ready_meetings:
+                yield {
+                    "event": "match",
+                    "data": ready_meetings,
+                }
+            # else:
+            #     yield {
+            #         "event": "end_event",
+            #         "data": "End of the stream",
+            #     }
+
+    return EventSourceResponse(event_generator())

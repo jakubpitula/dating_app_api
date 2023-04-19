@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 from dependencies import get_current_user, oauth2_scheme, ref
 from models import CurrentUser, BaseUser
+from datetime import date, datetime
 
 router = APIRouter(
     prefix="/users",
@@ -13,7 +14,16 @@ router = APIRouter(
 
 @router.get("/me", response_model=CurrentUser)
 async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
-    return current_user
+    today = date.today()
+    birth = datetime.strptime(current_user["birthdate"], "%d/%m/%Y")
+    age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+    return JSONResponse(content={
+        "name": current_user["name"],
+        "age": age,
+        "gender": current_user["gender"],
+        "profilePicUrl": current_user["profilePicUrl"],
+        "email": current_user["email"]
+    }, status_code=200)
 
 
 @router.get("/friends")
@@ -63,8 +73,8 @@ async def update_user(request: Request, token: str = Depends(oauth2_scheme)):
 
     if "email" in req_json:
         user.update({"email": req_json["email"]})
-    if "age" in req_json:
-        user.update({"age": req_json["age"]})
+    if "date" in req_json:
+        user.update({"birthdate": req_json["date"]})
     if "gender" in req_json and req_json["gender"] in ('m', 'f', 'nb', 'pns'):
         user.update({"gender": req_json["gender"]})
     if "name" in req_json:
